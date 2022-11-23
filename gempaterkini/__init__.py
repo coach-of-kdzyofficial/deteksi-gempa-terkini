@@ -16,22 +16,52 @@ def ekstraksi_data():
         content = requests.get('https://www.bmkg.go.id/')
     except Exception:
         return None
+
     if content.status_code == 200 :
-        print(content.text)
-        # soup = BeautifulSoup(content)
-        # print(soup.prettify())
+        soup = BeautifulSoup(content.text, 'html.parser')
+        tanggal = soup.find('span', {'class':'waktu'})
+        result = tanggal.text.split(', ')
+        tanggal = result[0]
+        waktu = result[1]
+
+        result = soup.find('div', {'class':'col-md-6 col-xs-6 gempabumi-detail no-padding'})
+        result = result.findChildren('li')
+
+        i=0
+        magnitudo = None
+        kedalaman = None
+        koordinat = None
+        lokasi = None
+        ls = None
+        bt = None
+        dirasakan = None
+
+        for res in result:
+            if i == 1:
+                magnitudo = res.text
+            elif i == 2:
+                kedalaman = res.text
+            elif i == 3:
+                koordinat = res.text.split('-')
+                ls = koordinat[0]
+                bt = koordinat[1]
+            elif i == 4:
+                lokasi = res.text
+            elif i == 5:
+                dirasakan = res.text
+            i= i + 1
+
         hasil = dict()
-        hasil['tanggal'] = '22 November 2022'
-        hasil['waktu'] = '19:22:27 WIB'
-        hasil['magnitudo'] = 2.8
-        hasil['kedalaman'] = '2 km'
-        hasil['lokasi'] = {'ls':6.85, 'bt':107.06}
-        hasil['pusatgempa'] = 'Pusat gempa berada di darat 9 km BaratDaya Cianjur'
-        hasil['dirasakan'] = 'Dirasakan (Skala MMI): III Cugenang, III Cilaku'
+        hasil['tanggal'] = tanggal #'22 November 2022'
+        hasil['waktu'] = waktu #'19:22:27 WIB'
+        hasil['magnitudo'] = magnitudo #2.8
+        hasil['kedalaman'] = kedalaman #'2 km'
+        hasil['koordinat'] = {'ls': ls, 'bt': bt}
+        hasil['lokasi'] = lokasi #'Pusat gempa berada di darat 9 km BaratDaya Cianjur'
+        hasil['dirasakan'] = dirasakan #'Dirasakan (Skala MMI): III Cugenang, III Cilaku'
         return hasil
     else:
         return None
-
 
 def tampilkan_data(result):
     if result is None:
@@ -42,6 +72,6 @@ def tampilkan_data(result):
     print(f"Waktu {result['waktu']}")
     print(f"Magnitudo {result['magnitudo']}")
     print(f"Kedalaman {result['kedalaman']}")
-    print(f"Lokasi: LS={result['lokasi']['ls']}, BT={result['lokasi']['bt']}")
-    print(f"Pusat Gempa {result['pusatgempa']}")
+    print(f"Koordinat: LS={result['koordinat']['ls']}, BT={result['koordinat']['bt']}")
+    print(f"Lokasi {result['lokasi']}")
     print(f"Dirasakan {result['dirasakan']}")
